@@ -1,0 +1,13 @@
+代码来自：
+http://forum.ubuntu.org.cn/viewtopic.php?f=88&t=334588&start=15
+
+感谢sunkwei 网友
+
+ubuntu 下使用命令安装软件开发包：
+sudo apt-get install libavcodec-dev
+sudo apt-get install libswscale-dev 
+sudo apt-get install libavutil-dev
+sudo apt-get install libx264-dev
+
+这里放俺的程序：
+	1. zk_v4l2_x264_source: 使用 v4l2 源, 压缩为 x264, 然后通过 rtsp 发布;
