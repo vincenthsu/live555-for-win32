@@ -54,9 +54,13 @@ int capture_get_output_ptr (void *c, unsigned char***ptr, int **ls)
     return 1;
 }
 
+/*
+	函数功能: 打开视频设备,并完成设置和内存映射
+	参考资料: http://www.embedu.org/Column/Column320.htm
+*/
 void *capture_open (const char *dev_name, int t_width, int t_height, PixelFormat tarfmt)
 {
-	int id = open(dev_name, O_RDWR);
+	int id = open(dev_name, O_RDWR);//打开视频设备 /dev/videoX
 	if (id < 0) return 0;
 
 	Ctx *ctx = new Ctx;
@@ -66,18 +70,29 @@ void *capture_open (const char *dev_name, int t_width, int t_height, PixelFormat
 	v4l2_capability caps;
 	ioctl(id, VIDIOC_QUERYCAP, &caps);
 
-	if (caps.capabilities & V4L2_CAP_VIDEO_CAPTURE) {
-		if (caps.capabilities & V4L2_CAP_READWRITE) {
+	//测试是否支持捕获接口 The device supports the Video Capture interface.
+	if (caps.capabilities & V4L2_CAP_VIDEO_CAPTURE) 
+	{
+
+		//测试是否支持读写  The device supports the read() and/or write() I/O methods.
+		if (caps.capabilities & V4L2_CAP_READWRITE) 
+		{
 			// TODO: ...
 		}
-		if (caps.capabilities & V4L2_CAP_STREAMING) {
+
+		//测试是否支持流接口 The device supports the streaming I/O method.
+		if (caps.capabilities & V4L2_CAP_STREAMING) 
+		{
 			// 检查是否支持 MMAP, 还是 USERPTR
 			v4l2_requestbuffers bufs;
 			memset(&bufs, 0, sizeof(bufs));
-			bufs.count = 2;
-			bufs.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+			bufs.count = 2;//The number of buffers requested or granted. This field is only used when memory is set to V4L2_MEMORY_MMAP.
+			bufs.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;//Type of the stream or buffers, this is the same as the struct v4l2_format type field. See Table 3-2 for valid values.
 			bufs.memory = V4L2_MEMORY_MMAP;
-			if (ioctl(id, VIDIOC_REQBUFS, &bufs) < 0) {
+			
+			//向驱动申请帧缓存, 开启内存映射或用户指针I/O
+			if (ioctl(id, VIDIOC_REQBUFS, &bufs) < 0) 
+			{
 				fprintf(stderr, "%s: don't support MEMORY_MMAP mode!\n", __func__);
 				close(id);
 				delete ctx;
@@ -87,31 +102,37 @@ void *capture_open (const char *dev_name, int t_width, int t_height, PixelFormat
 			fprintf(stderr, "%s: using MEMORY_MMAP mode, buf cnt=%d\n", __func__, bufs.count);
 
 			// mmap
-			for (int i = 0; i < 2; i++) {
+			for (int i = 0; i < 2; i++) 
+			{
 				v4l2_buffer buf;
 				memset(&buf, 0, sizeof(buf));
 				buf.type = bufs.type;
 				buf.memory = bufs.memory;
-				if (ioctl(id, VIDIOC_QUERYBUF, &buf) < 0) {
+				//获取到对应index的缓存信息，此处主要利用length信息及offset信息来完成后面的mmap操作。
+				if (ioctl(id, VIDIOC_QUERYBUF, &buf) < 0) 
+				{
 					fprintf(stderr, "%s: VIDIOC_QUERYBUF ERR\n", __func__);
 					close(id);
 					delete ctx;
 					return 0;
 				}
 
+				 //转换成相对地址
 				ctx->bufs[i].length = buf.length;
 				ctx->bufs[i].start = mmap(0, buf.length, PROT_READ|PROT_WRITE,
 						MAP_SHARED, id, buf.m.offset);
 			}
 		}
-		else {
+		else 
+		{
 			fprintf(stderr, "%s: can't support read()/write() mode and streaming mode\n", __func__);
 			close(id);
 			delete ctx;
 			return 0;
 		}
 	}
-	else {
+	else 
+	{
 		fprintf(stderr, "%s: can't support video capture!\n", __func__);
 		close(id);
 		delete ctx;
@@ -126,17 +147,20 @@ void *capture_open (const char *dev_name, int t_width, int t_height, PixelFormat
 
         // 看起来, 不支持 plane fmt, 直接使用 RGB 吧, 然后使用 libswscale 转换
 #if 1
-	do {
+	do 
+	{
 		fmt_desc.index = index;
 		fmt_desc.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 		rc = ioctl(id, VIDIOC_ENUM_FMT, &fmt_desc);
 
-		if (rc >= 0) {
-			fprintf(stderr, "\t support %s\n", fmt_desc.description);
+		if (rc >= 0) 
+		{
+			fprintf(stderr, "\t %s: 当前驱动支持的视频格式(support) %s\n", __FUNCTION__, fmt_desc.description);
 		}
 		index++;
 	} while (rc >= 0);
 #endif // 0
+	//读取当前驱动的频捕获格式 
 	v4l2_format fmt;
 	fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	rc = ioctl(id, VIDIOC_G_FMT, &fmt);
@@ -158,16 +182,17 @@ void *capture_open (const char *dev_name, int t_width, int t_height, PixelFormat
 //	}
 
 	PixelFormat pixfmt = PIX_FMT_NONE;
-	switch (fmt.fmt.pix.pixelformat) {
-	case V4L2_PIX_FMT_YUYV:
-		pixfmt = PIX_FMT_YUYV422;
-		break;
+	switch (fmt.fmt.pix.pixelformat) 
+	{
+		case V4L2_PIX_FMT_YUYV:
+			pixfmt = PIX_FMT_YUYV422;
+			break;
 
-	case V4L2_PIX_FMT_MJPEG:
-		// pixfmt = PIX_FMT_YUVJ422P;
-		// 使用 mjpeg 应该能够满足 640x480x25, 但是需要解码 mjpeg
+		case V4L2_PIX_FMT_MJPEG:
+			// pixfmt = PIX_FMT_YUVJ422P;
+			// 使用 mjpeg 应该能够满足 640x480x25, 但是需要解码 mjpeg
 		
-		break;
+			break;
 	}
 
 	if (pixfmt == PIX_FMT_NONE) {
@@ -176,7 +201,7 @@ void *capture_open (const char *dev_name, int t_width, int t_height, PixelFormat
 	}
 
 	// 构造转换器
-	fprintf(stderr, "capture_width=%d, height=%d, stride=%d\n", fmt.fmt.pix.width, fmt.fmt.pix.height,
+	fprintf(stderr, "capture_width=%d, height=%d, stride(bytesperline)=%d\n", fmt.fmt.pix.width, fmt.fmt.pix.height,
 			fmt.fmt.pix.bytesperline);
 	ctx->width = t_width;
 	ctx->height = t_height;

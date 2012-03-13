@@ -31,7 +31,7 @@ static UsageEnvironment *_env = 0;
 
 #define VIDEO_WIDTH 320
 #define VIDEO_HEIGHT 240
-#define FRAME_PER_SEC 5.0
+#define FRAME_PER_SEC 10.0
 
 pid_t gettid()
 {
@@ -136,9 +136,9 @@ public:
 		: FramedSource(env)
 	{
 		fprintf(stderr, "[%d] %s .... calling\n", gettid(), __func__);
-		mp_capture = capture_open("/dev/video0", VIDEO_WIDTH, VIDEO_HEIGHT, PIX_FMT_YUV420P);
+		mp_capture = capture_open("/dev/video1", VIDEO_WIDTH, VIDEO_HEIGHT, PIX_FMT_YUV420P);
 		if (!mp_capture) {
-			fprintf(stderr, "%s: open /dev/video0 err\n", __func__);
+			fprintf(stderr, "%s: open /dev/video1 err\n", __func__);
 			exit(-1);
 		}
 
@@ -345,7 +345,7 @@ int main (int argc, char **argv)
 	//test(*_env);
 
 	// rtsp server
-	RTSPServer *rtspServer = RTSPServer::createNew(*_env, 8554);
+	RTSPServer *rtspServer = RTSPServer::createNew(*_env, 9554);
 	if (!rtspServer) {
 		fprintf(stderr, "ERR: create RTSPServer err\n");
 		::exit(-1);
@@ -355,7 +355,7 @@ int main (int argc, char **argv)
 	do {
 		WebcamFrameSource *webcam_source = 0;
 
-		ServerMediaSession *sms = ServerMediaSession::createNew(*_env, "webcam", 0, "Session from /dev/video0"); 
+		ServerMediaSession *sms = ServerMediaSession::createNew(*_env, "webcam", 0, "Session from /dev/video1"); 
 		sms->addSubsession(WebcamOndemandMediaSubsession::createNew(*_env, webcam_source));
 		rtspServer->addServerMediaSession(sms);
 
