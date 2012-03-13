@@ -56,7 +56,7 @@ int main (int argc, char **argv)
 
 	int tosleep = 1000000 / VIDEO_FPS;
 
-	FILE *fp_save = fopen("./my.264", "wb");
+	FILE *fp_save = fopen("./my1.264", "wb");
 
 	for (; ; ) {
 		// 抓
@@ -74,7 +74,7 @@ int main (int argc, char **argv)
 		fwrite(outdata, 1, outlen, fp_save);
 
 		// 等
-		usleep(tosleep);
+		//usleep(tosleep);
 	}
 
 	fclose(fp_save);
