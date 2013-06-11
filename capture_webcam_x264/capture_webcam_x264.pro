@@ -8,10 +8,12 @@ DEPENDPATH += .
 INCLUDEPATH += .
 
 # Input
-HEADERS += capture.h sender.h types.h vcompress.h
+HEADERS += capture.h sender.h types.h vcompress.h \
+    avilib.h
 SOURCES += capture.cpp \
            vcompress.cpp \
-    main.cpp
+    main.cpp \
+    avilib.c
 
 INCLUDEPATH += ../UsageEnvironment/include
 INCLUDEPATH += ../groupsock/include
