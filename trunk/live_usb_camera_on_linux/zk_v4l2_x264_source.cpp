@@ -38,6 +38,7 @@ pid_t gettid()
 	return syscall(SYS_gettid);
 }
 
+#if 0
 class MyOndemandMediaSubsession : public OnDemandServerMediaSubsession
 {
 	char *mp_sdp_line;
@@ -123,6 +124,7 @@ public:
 		return H264VideoRTPSink::createNew(envir(), rtpgs, type);
 	}
 };
+#endif
 
 // 使用 webcam + x264
 class WebcamFrameSource : public FramedSource
@@ -317,6 +319,7 @@ private:
 	char m_done;
 };
 
+#if 0
 static void test_task (void *ptr)
 {
 	fprintf(stderr, "test: task ....\n");
@@ -334,6 +337,7 @@ static void test (UsageEnvironment &env)
 
 	fprintf(stderr, "test: end..\n");
 }
+#endif
 
 int main (int argc, char **argv)
 {
