@@ -14,6 +14,7 @@ extern "C"{
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/time.h>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -75,13 +76,15 @@ int main (int argc, char **argv)
 #endif
 
     avi_t* avi_handle = AVI_open_output_file("record.avi");
-    AVI_set_video(avi_handle, VIDEO_WIDTH, VIDEO_HEIGHT, 30, "x264");
+    AVI_set_video(avi_handle, VIDEO_WIDTH, VIDEO_HEIGHT, 1, "x264");
 	int tosleep = 1000000 / VIDEO_FPS;
 
     FILE *fp_save = fopen("./record.264", "wb");
 
     int frame_no = 0;
     //for(;;)
+    struct timeval t1, t2;
+    gettimeofday(&t1, NULL);
     while(record_flag)
     {
 		// 抓
@@ -99,10 +102,12 @@ int main (int argc, char **argv)
         fwrite(outdata, 1, outlen, fp_save);
         AVI_write_frame(avi_handle, (char*)outdata, outlen);
 		// 等
-		//usleep(tosleep);
+        //usleep(tosleep);
         printf("frame_no=%d\n", frame_no++);
 	}
-
+    gettimeofday(&t2, NULL);
+    int ms = (t2.tv_sec-t1.tv_sec)*1000+(t2.tv_sec-t1.tv_sec)/1000;
+    printf("calculate fps = %d\n", frame_no/(ms/1000));
     AVI_close(avi_handle);
 	fclose(fp_save);
 
