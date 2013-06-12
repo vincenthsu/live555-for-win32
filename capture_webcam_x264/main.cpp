@@ -91,12 +91,12 @@ int main (int argc, char **argv)
 		// 压
 		const void *outdata;
 		int outlen;
-		int rc = vc_compress(encoder, pic.data, pic.stride, &outdata, &outlen);
-		if (rc < 0) continue;
+        int rc = vc_compress(encoder, pic.data, pic.stride, &outdata, &outlen);
+        if (rc < 0) continue;
 		
 		// 发
 		//sender_send(sender, outdata, outlen);
-		fwrite(outdata, 1, outlen, fp_save);
+        fwrite(outdata, 1, outlen, fp_save);
         AVI_write_frame(avi_handle, (char*)outdata, outlen);
 		// 等
 		//usleep(tosleep);
