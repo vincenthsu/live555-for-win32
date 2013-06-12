@@ -8,24 +8,26 @@ DEPENDPATH += .
 INCLUDEPATH += .
 
 # Input
-HEADERS += capture.h sender.h types.h vcompress.h \
-    avilib.h
-SOURCES += capture.cpp \
-           vcompress.cpp \
-    main.cpp \
-    avilib.c
+HEADERS += capture.h sender.h types.h vcompress.h
+SOURCES += \
+    capture.cpp \
+    avilib.c \
+    vcompress.cpp \
+    liveserver.cpp
 
 INCLUDEPATH += ../UsageEnvironment/include
 INCLUDEPATH += ../groupsock/include
 INCLUDEPATH += ../liveMedia/include
 INCLUDEPATH += ../BasicUsageEnvironment/include
-LIBS += -L"../groupsock/"
-LIBS += -L"../UsageEnvironment/"
-LIBS += -L"../liveMedia/"
-LIBS += -L"../BasicUsageEnvironment/"
-LIBS += -lgroupsock
-LIBS += -lUsageEnvironment
-LIBS += -lliveMedia
-LIBS += -lliveMedia
-LIBS += -lBasicUsageEnvironment
-LIBS += -lswscale -lavutil -lavcodec -lavformat -lx264
+#LIBS += -L"../groupsock/"
+#LIBS += -L"../UsageEnvironment/"
+#LIBS += -L"../liveMedia/"
+#LIBS += -L"../BasicUsageEnvironment/"
+#LIBS += -lgroupsock
+#LIBS += -lUsageEnvironment
+#LIBS += -lliveMedia
+#LIBS += -lliveMedia
+#LIBS += -lBasicUsageEnvironment
+#LIBS += -lswscale -lavutil -lavcodec -lavformat -lx264 -fPIC -g3 -O0 -lpthread
+LIBS += ..//liveMedia/libliveMedia.a ..//groupsock/libgroupsock.a ..//BasicUsageEnvironment/libBasicUsageEnvironment.a ..//UsageEnvironment/libUsageEnvironment.a
+LIBS += -lswscale -lavutil -lavcodec -lavformat -lx264 -fPIC -g3 -O0 -lpthread
