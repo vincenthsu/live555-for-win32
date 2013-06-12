@@ -76,6 +76,7 @@ void *capture_open (const char *dev_name, int t_width, int t_height, PixelFormat
 	// to query caps
 	v4l2_capability caps;
 	ioctl(id, VIDIOC_QUERYCAP, &caps);
+    v4l2_format fmt;
 
 	//测试是否支持捕获接口 The device supports the Video Capture interface.
 	if (caps.capabilities & V4L2_CAP_VIDEO_CAPTURE) 
@@ -86,6 +87,49 @@ void *capture_open (const char *dev_name, int t_width, int t_height, PixelFormat
 		{
 			// TODO: ...
 		}
+
+
+        //支持流接口就设置width, height, 并且要在VIDIOC_REQBUFS之前设置才能成功
+        if (caps.capabilities & V4L2_CAP_STREAMING)
+        {
+            int force_format = 1;
+
+            memset(&fmt, 0, sizeof(v4l2_format));
+        #if 1
+            fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            if (-1 == ioctl(id, VIDIOC_G_FMT, &fmt))//默认输出YUYV
+                    errno_exit("VIDIOC_G_FMT");
+
+            printf("original fmt.fmt.pix.width = %d\n", fmt.fmt.pix.width);
+            printf("original fmt.fmt.pix.height = %d\n", fmt.fmt.pix.height);
+            printf("original fmt.fmt.pix.pixelformat = %d\n", fmt.fmt.pix.pixelformat);
+            printf("original fmt.fmt.pix.field = %d\n", fmt.fmt.pix.field);
+        #endif
+            if (force_format) {
+                    fmt.fmt.pix.width       = t_width;
+                    fmt.fmt.pix.height      = t_height;
+                    fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+                    fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
+
+                    if (-1 == ioctl(id, VIDIOC_S_FMT, &fmt))
+                            errno_exit("VIDIOC_S_FMT");
+
+                    /* Note VIDIOC_S_FMT may change width and height. */
+            } else {
+                    /* Preserve original settings as set by v4l2-ctl for example */
+                    if (-1 == ioctl(id, VIDIOC_G_FMT, &fmt))//默认输出YUYV
+                            errno_exit("VIDIOC_G_FMT");
+            }
+        }
+
+
+
+
+
+
+
+
+
 
 		//测试是否支持流接口 The device supports the streaming I/O method.
 		if (caps.capabilities & V4L2_CAP_STREAMING) 
@@ -169,6 +213,30 @@ void *capture_open (const char *dev_name, int t_width, int t_height, PixelFormat
 #endif // 0
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 static int              fps=30;
 		struct v4l2_streamparm setfps;
 
@@ -200,8 +268,13 @@ static int              fps=30;
 		fprintf(stderr, "after: setfps.parm.capture.timeperframe.denominator=%d\n", setfps.parm.capture.timeperframe.denominator);
 
 
-	//读取当前驱动的频捕获格式 
-	v4l2_format fmt;
+    //读取当前驱动的频捕获格式
+    //v4l2_format fmt;
+
+
+
+
+
 	fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	rc = ioctl(id, VIDIOC_G_FMT, &fmt);
 	if (rc < 0) {
